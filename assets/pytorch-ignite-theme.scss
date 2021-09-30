@@ -1,0 +1,136 @@
+@import "reveal-js/css/theme/template/mixins";
+@import "reveal-js/css/theme/template/settings";
+
+$backgroundColor: rgb(255, 255, 248);
+
+$mainColor: #222;
+$headingColor: #222;
+
+$mainFontSize: 32px;
+$mainFont: Helvetica, sans-serif;
+$headingFont: Helvetica, sans-serif;
+$headingTextShadow: none;
+$headingLetterSpacing: normal;
+$headingTextTransform: none;
+$headingFontWeight: bold;
+$linkColor: #eaa700;
+$linkColorHover: darken( $linkColor, 25% );
+$selectionBackgroundColor: #ee4c2c;
+
+$heading1Size: 1.8em;
+$heading2Size: 1.4em;
+$heading3Size: 1.2em;
+$heading4Size: 1.0em;
+
+@import "reveal-js/css/theme/template/theme";
+
+
+code {
+  background-color: #f2f2f2;
+  padding: .1em;
+  border-radius: .2em;
+}
+
+li {
+  line-height: 1.5em;
+}
+
+.reveal pre {
+  font-size: .65em;
+}
+
+.reveal p {
+    margin: 10px 0;
+    line-height: 1.2;
+}
+
+.reveal p.social-author {
+  font-size: 0.8em;
+  margin-bottom: 0;
+}
+
+.hljs-ln-numbers {
+    display: none;
+}
+
+.icon {
+    background-size: cover;
+    display: inline-block;
+    transform: scale(1.5);
+    margin-top: 12px;
+    margin-right: 32px;
+    height: 24px;
+    width: 25px;
+}
+
+.reveal blockquote{
+  font-style:italic;
+  color: #555555;
+  border-left: 8px solid #eaa700;
+  position: relative;
+  background: #EDEDED;
+}
+
+.reveal blockquote p {
+  margin-left: 1em;
+}
+
+
+.reveal blockquote cite{
+  display:block;
+  color:#333333;
+  font-style: normal;
+  font-weight: bold;
+}
+
+.reveal section img {
+  margin: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.reveal pre code {
+  padding: 10px;
+}
+
+.reveal strong {
+  color: #eaa700;
+}
+
+.g-success {
+    background-color: rgba(40,167,69,0.25);
+    border: 2px solid rgb(40,167,69);
+    border-radius: 5px;
+    width: 95%;
+    display: block;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    margin: 0 0.5rem;
+}
+
+.g-alert {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 2px solid #f5c6cb;
+    border-radius: 5px;
+    width: 95%;
+    display: block;
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    margin: 0 0.5rem;
+}
+
+span.hljs-comment {
+  color: #eaa700;
+}
+
+.footer {
+    color: #eee;
+    background-color: #ee4c2c;
+    position: relative;
+    top: 90%;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    padding: 2.8rem;
+}

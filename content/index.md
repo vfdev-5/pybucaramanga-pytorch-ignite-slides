@@ -32,7 +32,7 @@ Slides: https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/
 Priyansi <a href="https://github.com/Priyansi">@Priyansi</a>
 </td>
 <td style="font-size: 20px;">
-CS Undergrad working revamping PyTorch-Ignite's docs and managing the community 
+CS Undergrad working on revamping PyTorch-Ignite's docs and managing the community
 </td>
 </tr>
 

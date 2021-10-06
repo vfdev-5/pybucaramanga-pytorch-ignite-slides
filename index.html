@@ -1,0 +1,477 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><title>PyTorch-Ignite: train and evaluate neural networks flexibly and transparently</title><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="black-translucent"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/reveal-js/css/reset.css><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/reveal-js/css/reveal.css><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/_.min.8ec951ac6da9e7125707e4be140a4254d72ce59870ff05ab63614755f666d83d.css id=theme><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/highlight-js/monokai-sublime.min.css></head><body><style>#logo{position:absolute;top:1%;left:1%;width:15%}</style><img id=logo src=https://raw.githubusercontent.com/pytorch/ignite/master/assets/logo/ignite_logomark.svg alt><div class=reveal><div class=slides><section><h1 id=pytorch-ignite>PyTorch-Ignite</h1><blockquote><p>Training and evaluating neural networks
+flexibly and transparently</p></blockquote><p>Victor Fomin (<a href=https://labs.quansight.org/>Quansight Labs</a>)</p><div class=container><div class=columns><div class=column><div class=level-left><a class=level-item href=https://www.github.com/pytorch/ignite><span class=icon><i class="fab fa-github"></i></span></a><a class=level-item href=https://www.twitter.com/pytorch_ignite><span class=icon><i class="fab fa-twitter"></i></span></a><a class=level-item href=https://www.facebook.com/PyTorch-Ignite-Community-105837321694508><span class=icon><i class="fab fa-facebook"></i></span></a><a class=level-item href=https://dev.to/pytorch-ignite><span class=icon><i class="fab fa-dev"></i></span></a><a class=level-item href=https://discord.gg/djZtm3EmKj><span class=icon><i class="fab fa-discord"></i></span></a></div></div></div></div><p><div style=color:transparent>.</div><div style=color:transparent>.</div></p><p><a href=https://pytorch-ignite.ai>https://pytorch-ignite.ai</a></p></section><section><h1 id=content>Content</h1><ul><li>PyTorch-Ignite: what and why?</li><li>Quick-start example</li><li>Convert PyTorch to Ignite</li><li>About the project</li><li>Special topics<ul><li>Multi-GPU training</li><li><code>py_config_runner</code></li></ul></li></ul></section><section><section data-shortcode-section><h1 id=pytorch-in-a-nutshell>PyTorch in a nutshell</h1><table style=font-size:20px><tr><td><pre><code class=language-python>import torch
+import torch.nn as nn
+
+device = &quot;cuda&quot;
+
+class MyNN(nn.Module):
+    def __init__(self):
+        super(MyNN, self).__init__()
+        self.flatten = nn.Flatten()
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(28*28, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 10)
+        )
+
+    def forward(self, x):
+        x = self.flatten(x)
+        logits = self.linear_relu_stack(x)
+        return logits
+
+model = MyNN().to(device)
+</code></pre></td><td><div style=color:transparent>.</div><ul><li>tensor manipulations (device: CPUs, GPUs, TPUs)</li><li>NN components, optimizers, loss functions</li><li>Distributed computations</li><li>Profiling</li><li>other cool features &mldr;</li><li>Domain libraries: vision, text, audio</li><li>Rich ecosystem</li></ul></td></tr></table><p><a href=https://pytorch.org/tutorials/beginner/basics/intro.html>https://pytorch.org/tutorials/beginner/basics/intro.html</a></p></section><section><h2 id=why-using-pytorch-without-ignite-is-suboptimal->Why using PyTorch without Ignite is suboptimal ?</h2><p>For NN training and evaluation:</p><ul><li>PyTorch gives only &ldquo;low&rdquo;-level building components</li><li>Common bricks to code in any user project:<ul><li>metrics</li><li>checkpointing, best model saving, early stopping, &mldr;</li><li>logging to experiment tracking systems</li><li>code adaptation for device (e.g. GPU, XLA)</li></ul></li></ul></section><section><ul><li>Pure PyTorch code</li></ul><div style=font-size:20px><pre><code class=language-python>
+model = Net()
+train_loader, val_loader = get_data_loaders(train_batch_size, val_batch_size)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.8)
+criterion = torch.nn.NLLLoss()
+
+max_epochs = 10
+validate_every = 100
+checkpoint_every = 100
+
+def validate(model, val_loader):
+    model = model.eval()
+    num_correct = 0
+    num_examples = 0
+    for batch in val_loader:
+        input, target = batch
+        output = model(input)
+        correct = torch.eq(torch.round(output).type(target.type()), target).view(-1)
+        num_correct += torch.sum(correct).item()
+        num_examples += correct.shape[0]
+    return num_correct / num_examples
+
+
+def checkpoint(model, optimizer, checkpoint_dir):
+    # ...
+    pass
+
+iteration = 0
+
+for epoch in range(max_epochs):
+    for batch in train_loader:
+        model = model.train()
+        optimizer.zero_grad()
+        input, target = batch
+        output = model(input)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+
+        if iteration % validate_every == 0:
+            binary_accuracy = validate(model, val_loader)
+            print(&quot;After {} iterations, binary accuracy = {:.2f}&quot;
+                  .format(iteration, binary_accuracy))
+
+        if iteration % checkpoint_every == 0:
+            checkpoint(model, optimizer, checkpoint_dir)
+        iteration += 1
+
+</code></pre></div></section><section><h1 id=pytorch-ignite-what-and-why->PyTorch-Ignite: what and why? 🤔</h1><blockquote><p>High-level <strong>library</strong> to help with training and evaluating neural networks in PyTorch flexibly and transparently.</p></blockquote><ul><li><a href=https://github.com/pytorch/ignite>https://github.com/pytorch/ignite</a></li></ul><table style=font-size:20px><tr><td><pre><code class=language-python>
+def train_step(engine, batch):
+  #  ... any training logic ...
+  return batch_loss
+
+trainer = Engine(train_step)
+
+# Compose your pipeline ...
+
+trainer.run(train_loader, max_epochs=100)
+
+
+</code></pre></td><td><pre><code class=language-python>
+metrics = {
+  &quot;precision&quot;: Precision(),
+  &quot;recall&quot;: Recall()
+}
+
+evaluator = create_supervised_evaluator(
+  model,
+  metrics=metrics
+)
+
+
+</code></pre></td><td><pre><code class=language-python>@trainer.on(Events.EPOCH_COMPLETED)
+def run_evaluation():
+  evaluator.run(test_loader)
+
+handler = ModelCheckpoint(
+  '/tmp/models', 'checkpoint'
+)
+trainer.add_event_handler(
+  Events.EPOCH_COMPLETED,
+  handler,
+  {'model': model}
+)
+</code></pre></td></tr></table></section><section><h1 id=key-concepts-in-a-nutshell>Key concepts in a nutshell</h1><h4 id=pytorch-ignite-is-about>PyTorch-Ignite is about:</h4><ol><li>Engine and Event System</li><li>Out-of-the-box metrics to easily evaluate models</li><li>Built-in handlers to compose training pipeline</li><li>Distributed Training support</li></ol></section><section><h1 id=what-makes-pytorch-ignite-unique->What makes PyTorch-Ignite unique ?</h1><ul><li>Composable and interoperable components</li><li>Simple and understandable code</li><li>Open-source community involvement</li></ul></section><section><h1 id=how-pytorch-ignite-makes-users-live-easier->How PyTorch-Ignite makes user&rsquo;s live easier ?</h1><p>With PyTorch-Ignite:</p><ul><li>Less code than pure PyTorch while ensuring maximum control and simplicity</li><li>Easily get more refactored and structured code</li><li>Extensible API for metrics, experiment managers, and other components</li><li>Same code for non-distributed and distributed configs</li></ul></section><section><h1 id=global-picture>Global picture</h1><div style=font-size:18px><pre><code class=language-python>import ignite.distributed as idist
+from ignite.engine import Engine, Events
+from ignite.metrics import Accuracy, Loss
+from ignite.contrib.engines import common
+
+
+def initialize():
+  # Pure pytorch code ...
+  return model, optimizer, criterion
+
+
+def training():
+    train_loader, test_loader = get_data_loaders(train_batch_size, val_batch_size)
+    model, optimizer, criterion = initialize()
+
+    trainer: Engine = create_trainer(model, optimizer, criterion)
+    metrics = {
+        &quot;Accuracy&quot;: Accuracy(), &quot;Loss&quot;: Loss(criterion),
+    }
+    evaluator: Engine = create_evaluator(model, metrics=metrics)
+
+    @trainer.on(Events.EPOCH_COMPLETED(every=3) | Events.COMPLETED)
+    def run_validation(engine):
+        evaluator.run(test_loader)
+
+    if rank == 0:
+        evaluators = {&quot;test&quot;: evaluator, }
+        tb_logger = common.setup_tb_logging(output_path, trainer, optimizer, evaluators=evaluators)
+
+    trainer.run(train_loader, max_epochs=100)
+
+    if rank == 0:
+        tb_logger.close()
+
+def main():
+    backend = None # &quot;nccl&quot;, &quot;gloo&quot;, &quot;xla-tpu&quot;, &quot;horovod&quot;
+    with idist.Parallel(backend=backend) as parallel:
+        parallel.run(training)
+
+</code></pre></div></section></section><section><section data-shortcode-section><h1 id=quick-start-example->Quick-start example 👩‍💻👨‍💻</h1><p>Let&rsquo;s train a MNIST classifier with PyTorch-Ignite!</p><ul><li><a href=https://colab.research.google.com/github/pytorch-ignite/pytorch-ignite.ai/blob/gh-pages/tutorials/getting-started.ipynb>Link on Colab</a></li></ul></section><section><h3 id=pytorch-ignite-code-generator>PyTorch-Ignite Code-Generator</h3><img height=300 src=https://raw.githubusercontent.com/pytorch-ignite/code-generator/main/src/assets/code-generator-demo-1080p.gif><div style=font-size:20px><p><a href=https://code-generator.pytorch-ignite.ai/>https://code-generator.pytorch-ignite.ai/</a></p><ul><li><p><strong>What is Code-Generator?</strong>: web app to quickly produce quick-start python code for common training tasks in deep learning.</p></li><li><p><strong>Why to use Code-Generator?</strong>: start working on a task without rewriting everything from scratch.</p></li></ul></div></section></section><section><section data-shortcode-section><h1 id=the-big-picture>The Big Picture</h1><img height=500 src=images/Ignite_Big_Picture.png></section><section><h2 id=engine-and-event-system>Engine and Event System</h2><table style=font-size:20px><tr><td><div style=color:transparent>.</div><ul><li><p><strong>Engine</strong></p><ul><li>Loops on user data</li><li>Applies an arbitrary user function on batches</li></ul></li><li><p><strong>Event system</strong></p><ul><li>Customizable event collections</li><li>Triggers handlers attached to events</li></ul></li></ul></td><td>In its simpliest form:<pre><code class=language-python data-line-numbers=2,5,7|1,3,6,8,10,11>fire_event(Events.STARTED)
+while epoch &lt; max_epochs:
+    fire_event(Events.EPOCH_STARTED)
+
+    for batch in data:
+        fire_event(Events.ITERATION_STARTED)
+        output = train_step(batch)
+        fire_event(Events.ITERATION_COMPLETED)
+
+    fire_event(Events.EPOCH_COMPLETED)
+fire_event(Events.COMPLETED)
+</code></pre></td></tr></table></section><section><h3 id=simplified-training-and-validation-loop>Simplified training and validation loop</h3><div style=font-size:20px><p>No more coding <code>for/while</code> loops on epochs and iterations. Users instantiate engines and run them.</p><pre><code class=language-python>from ignite.engine import Engine, Events, create_supervised_evaluator
+from ignite.metrics import Accuracy
+
+
+# Setup training engine:
+def train_step(engine, batch):
+    # Users can do whatever they need on a single iteration
+    # Eg. forward/backward pass for any number of models, optimizers, etc.
+    # ...
+
+trainer = Engine(train_step)
+
+# Setup single model evaluation engine
+evaluator = create_supervised_evaluator(model, metrics={&quot;accuracy&quot;: Accuracy()})
+
+def validation():
+    state = evaluator.run(validation_data_loader)
+    # print computed metrics
+    print(trainer.state.epoch, state.metrics)
+
+# Run model's validation at the end of each epoch
+trainer.add_event_handler(Events.EPOCH_COMPLETED, validation)
+
+# Start the training
+trainer.run(training_data_loader, max_epochs=100)
+</code></pre></div></section><section><h3 id=power-of-events--handlers->Power of Events & Handlers 🚀</h3><h4 id=1-execute-any-number-of-functions-whenever-you-wish>1. Execute any number of functions whenever you wish</h4><div style=font-size:20px><p>Handlers can be any function: e.g. lambda, simple function, class method, etc.</p><pre><code class=language-python>trainer.add_event_handler(Events.STARTED, lambda _: print(&quot;Start training&quot;))
+
+# attach handler with args, kwargs
+mydata = [1, 2, 3, 4]
+logger = ...
+
+def on_training_ended(data):
+    print(f&quot;Training is ended. mydata={data}&quot;)
+    # User can use variables from another scope
+    logger.info(&quot;Training is ended&quot;)
+
+
+trainer.add_event_handler(Events.COMPLETED, on_training_ended, mydata)
+# call any number of functions on a single event
+trainer.add_event_handler(Events.COMPLETED, lambda engine: print(engine.state.times))
+
+@trainer.on(Events.ITERATION_COMPLETED)
+def log_something(engine):
+    print(engine.state.output)
+</code></pre></div></section><section><h3 id=power-of-events--handlers>Power of Events & Handlers</h3><h4 id=2-built-in-events-filtering-and-stacking>2. Built-in events filtering and stacking</h4><div style=font-size:20px><pre><code class=language-python># run the validation every 5 epochs
+@trainer.on(Events.EPOCH_COMPLETED(every=5))
+def run_validation():
+    # run validation
+
+@trainer.on(Events.COMPLETED | Events.EPOCH_COMPLETED(every=10))
+def run_another_validation():
+    # ...
+
+# change some training variable once on 20th epoch
+@trainer.on(Events.EPOCH_STARTED(once=20))
+def change_training_variable():
+    # ...
+
+# Trigger handler with customly defined frequency
+@trainer.on(Events.ITERATION_COMPLETED(event_filter=first_x_iters))
+def log_gradients():
+    # ...
+
+</code></pre></div></section><section><h3 id=power-of-events--handlers-1>Power of Events & Handlers</h3><h4 id=3-custom-events-to-go-beyond-standard-events>3. Custom events to go beyond standard events</h4><div style=font-size:20px><pre><code class=language-python>from ignite.engine import EventEnum
+
+# Define custom events
+class BackpropEvents(EventEnum):
+    BACKWARD_STARTED = 'backward_started'
+    BACKWARD_COMPLETED = 'backward_completed'
+    OPTIM_STEP_COMPLETED = 'optim_step_completed'
+
+def train_step(engine, batch):
+    # ...
+    loss = criterion(y_pred, y)
+    engine.fire_event(BackpropEvents.BACKWARD_STARTED)
+    loss.backward()
+    engine.fire_event(BackpropEvents.BACKWARD_COMPLETED)
+    optimizer.step()
+    engine.fire_event(BackpropEvents.OPTIM_STEP_COMPLETED)
+    # ...
+
+trainer = Engine(train_step)
+trainer.register_events(*BackpropEvents)
+
+@trainer.on(BackpropEvents.BACKWARD_STARTED)
+def function_before_backprop(engine):
+    # ...
+</code></pre></div></section><section><h1 id=out-of-the-box-metrics->Out-of-the-box metrics 📈</h1><p>50+ distributed ready out-of-the-box metrics to easily evaluate models.</p><ul><li>Dedicated to many Deep Learning tasks</li><li>Easily composable to assemble a custom metric</li><li>Easily extendable to create custom metrics</li></ul><div style=color:transparent>.</div><pre><code class=language-python>precision = Precision(average=False)
+recall = Recall(average=False)
+F1_per_class = (precision * recall * 2 / (precision + recall))
+F1_mean = F1_per_class.mean()  # torch mean method
+F1_mean.attach(engine, &quot;F1&quot;)
+</code></pre></section><section><h1 id=built-in-handlers>Built-in Handlers</h1><table style=font-size:20px><tr><td><div style=color:transparent>.</div><ul><li>Logging to experiment tracking systems</li><li>Checkpointing,</li><li>Early stopping</li><li>Profiling</li><li>Parameter scheduling</li><li>etc.</li></ul></td><td><pre><code class=language-python># model checkpoint handler
+checkpoint = ModelCheckpoint('/tmp/ckpts', 'training')
+trainer.add_event_handler(Events.EPOCH_COMPLETED(every=2), handler, {'model': model})
+
+# early stopping handler
+def score_function(engine):
+    val_loss = engine.state.metrics['acc']
+    return val_loss
+es = EarlyStopping(3, score_function, trainer)
+evaluator.add_event_handler(Events.COMPLETED, handler)
+
+# Piecewise linear parameter scheduler
+scheduler = PiecewiseLinear(optimizer, 'lr', [(10, 0.5), (20, 0.45), (21, 0.3), (30, 0.1), (40, 0.1)])
+trainer.add_event_handler(Events.ITERATION_STARTED, scheduler)
+
+# TensorBoard logger: batch loss, metrics
+tb_logger = TensorboardLogger(log_dir=&quot;tb-logger&quot;)
+tb_logger.attach_output_handler(
+    trainer, event_name=Events.ITERATION_COMPLETED(every=100), tag=&quot;training&quot;,
+    output_transform=lambda loss: {&quot;batch_loss&quot;: loss},
+)
+
+tb_logger.attach_output_handler(
+    evaluator, event_name=Events.EPOCH_COMPLETED,
+    tag=&quot;training&quot;, metric_names=&quot;all&quot;,
+    global_step_transform=global_step_from_engine(trainer),
+)
+</code></pre></td></tr></table></section><section><h1 id=distributed-training-support>Distributed Training support</h1><p>Run the same code across all supported backends seamlessly</p><ul><li>Backends from native torch distributed configuration: <code>nccl</code>, <code>gloo</code>, <code>mpi</code></li><li>Horovod framework with <code>gloo</code> or <code>nccl</code> communication backend</li><li>XLA on TPUs via <code>pytorch/xla</code></li></ul><div style=font-size:20px><pre><code class=language-python>import ignite.distributed as idist
+
+def training(local_rank, *args, **kwargs):
+    dataloder_train = idist.auto_dataloder(dataset, ...)
+
+    model = ...
+    model = idist.auto_model(model)
+
+    optimizer = ...
+    optimizer = idist.auto_optimizer(optimizer)
+
+backend = 'nccl'  # or 'gloo', 'horovod', 'xla-tpu' or None
+with idist.Parallel(backend) as parallel:
+    parallel.run(training)
+</code></pre></div></section><section><h1 id=distributed-training-support-1>Distributed Training support</h1><h2 id=distributed-launchers>Distributed launchers</h2><p>Handle distributed launchers with the same code</p><ul><li><code>torch.multiprocessing.spawn</code></li><li><code>torch.distributed.launch</code></li><li><code>horovodrun</code></li><li><code>slurm</code></li></ul></section><section><h1 id=distributed-training-support-2>Distributed Training support</h1><h2 id=unified-distributed-api>Unified Distributed API</h2><ul><li><p>High-level helper methods</p><ul><li><code>idist.auto_model()</code></li><li><code>idist.auto_optim()</code></li><li><code>idist.auto_dataloader()</code></li></ul></li><li><p>Collective operations</p><ul><li><code>all_reduce</code>, <code>all_gather</code>, and more</li></ul></li></ul></section></section><section><section data-shortcode-section><h1 id=-convert-pytorch-to-ignite->🔥 Convert PyTorch to Ignite ❤️‍🔥</h1><p>How to translate pure PyTorch code to PyTorch+Ignite</p></section><section><img height=600 src=images/1.png></section><section><img height=600 src=images/2.png></section><section><img height=600 src=images/3.png></section><section><img height=600 src=images/4.png></section><section><img height=600 src=images/5.png></section><section><img height=600 src=images/6.png></section><section><img height=600 src=images/7.png></section><section><img height=600 src=images/8.png></section><section><img height=600 src=images/9.png></section><section><img height=600 src=images/10.png></section></section><section><section data-shortcode-section><h1 id=about-pytorch-ignite-project>About &ldquo;PyTorch-Ignite&rdquo; project</h1><p>Community-driven open source and <em>NumFOCUS Affiliated</em> Project</p><p>maintained by volunteers in the PyTorch community:</p><pre><code>@vfdev-5, @ydcjeff, @KickItLikeShika, @sdesrozis, @alykhantejani, @anmolsjoshi,
+@trsvchn, @Moh-Yakoub, ..., @fco-dv, @gucifer, @Priyansi, ...
+</code></pre><p><img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-medium/1f389@2x.png alt=o1>
+<img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-medium/1f44f@2x.png alt=o2>
+<img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-medium/1f64f@2x.png alt=o3></p><p>With the support of:</p><img width=150 src=https://numfocus.org/wp-content/uploads/2017/07/NumFocus_LRG.png>
+<img width=150 src=https://raw.githubusercontent.com/Quansight-Labs/quansight-labs-site/master/files/images/QuansightLabs_logo_V2.png>
+<img width=150 src=https://raw.githubusercontent.com/pytorch-ignite/pytorch-ignite.ai/main/static/_images/ifpen.png>
+<img width=80 src=https://d1.awsstatic.com/logos/aws-logo/full-color/AWS-Logo_Full-Color_1000x600.23165eb2b9af9cc8e068e74fbabc28222d091298.png>
+<img width=150 src=https://raw.githubusercontent.com/pytorch-ignite/pytorch-ignite.ai/main/static/_images/agenium_space.png></section><section><h1 id=projects-using-pytorch-ignite>Projects using PyTorch-Ignite</h1><ul><li>Research Papers</li><li>Blog articles, tutorials, books</li><li>Toolkits<ul><li><a href=https://monai.io/>Project MONAI</a>, <a href=https://nussl.github.io/docs/>Nussl</a>, &mldr;</li></ul></li></ul><p>More details here: <a href=https://pytorch-ignite.ai/ecosystem/>https://pytorch-ignite.ai/ecosystem/</a></p></section><section><h1 id=community-engagement>Community Engagement</h1><div style=font-size:24px><ul><li><p>Google Summer of Code 2021</p><ul><li>Mentored two great students (<em>Ahmed</em> and <em>Arpan</em>)</li></ul></li><li><p>Google Season of Docs 2021</p><ul><li>Working with great tech writer (<em>Priyansi</em>)</li></ul></li><li><p>Hacktoberfest 2020 and coming up 2021</p></li><li><p>PyData Global Mentored Sprint 2020 and coming up 2021 (End of October)</p></li><li><p>Our <a href=https://pytorch-ignite.ai>new website</a> development (thanks to <em>Jeff Yang</em>!)</p></li><li><p><a href=https://code-generator.pytorch-ignite.ai>PyTorch-Ignite Code-Generator project</a></p></li></ul><p><em>Stay tuned for upcoming events &mldr;</em></p><img width=50 src=https://summerofcode.withgoogle.com/static/img/summer-of-code-logo.svg>
+<img width=50 src=https://developers.google.com/season-of-docs/images/SeasonofDocs_Icon_Grey_300ppi_trimmed_480.png>
+<img width=50 src=https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg>
+<img width=150 src=https://pydata.org/global2021/wp-content/uploads/2021/06/logo.png></div></section><section><h1 id=join-the-pytorch-ignite-community>Join the PyTorch-Ignite Community</h1><p>We are looking for motivated contributors to help out with the project.</p><p><img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-small/1f3c5@2x.png alt=o1>
+Everyone is welcome to contribute
+<img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-small/1f4af@2x.png alt=o2></p><a class=level-item href=https://www.github.com/pytorch/ignite><span class=icon><i class="fab fa-github"></i></span></a><a class=level-item href=https://discord.gg/djZtm3EmKj><span class=icon><i class="fab fa-discord"></i></span></a><div style=color:transparent>.</div><h4 id=how-to-start>How to start:</h4><ul><li>Read our <a href=https://github.com/pytorch/ignite/blob/master/CONTRIBUTING.md>Contributing guides</a></li><li>Pick <a href="https://github.com/pytorch/ignite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22">List of Help-wanted GH issue</a></li><li>Reach out to us on GH or Discord for more guidance</li></ul></section></section><section><section data-shortcode-section><h1 id=special-topics>Special topics</h1><h2 id=1-multi-gpu-training>1) Multi-GPU training</h2><h3 id=data-model-and-pipeline-parallelisms>Data, Model and Pipeline parallelisms</h3><p>About how to efficiently split data and model across a number of parallel processes</p></section><section><h4 id=why-do-we-need-that->Why do we need that ?</h4><ul><li>Efficient usage of the hardware</li><li>Efficient large datasets processing</li><li>Enable large model training when single model can not fit single device</li></ul></section><section><h4 id=terms>Terms</h4><ul><li><code>WORLD_SIZE</code> : number of processes used in computations, e.g. number of all GPUs across all machines<ul><li>For example, we have 2 machines with 4 GPUs each, <code>WORLD_SIZE</code> is <code>2 * 4</code></li></ul></li><li><code>RANK</code> : process unique identifier, varies between <code>0</code> to <code>WORLD_SIZE - 1</code></li><li><code>LOCAL_RANK</code> : machine-wise process identifier, e.g. GPUs index on the node.</li><li>Single Node, Multiple GPUs setup : one machine with multiple GPUs</li><li>Multiple Nodes, Multiple GPUs setup: several machines (or nodes) with same number of GPUs</li></ul></section><section><h4 id=data-parallelism>Data parallelism</h4><ul><li>Data is split between N processes into N chunks</li><li>Model is replicated across N processes</li><li>Gradients are summed between all model replicas and applied to all of them => all models updated in the same way</li></ul><img src=https://miro.medium.com/max/679/1*EBMyS03ql4TakYS48vYaMQ.png width=220></section><section><h4 id=in-practice-with-pytorch-only>In practice with PyTorch only</h4><div style=font-size:18px><pre><code class=language-python># Run as
+# python -m torch.distributed.launch --nproc_per_node N --use_env main.py
+import os
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+def training(backend=&quot;nccl&quot;):
+    config = ...
+    rank, world_size = dist.get_rank(), dist.get_world_size()
+    torch.cuda.set_device(rank)
+    # ... setup the data ...
+    train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
+    train_loader = torch.utils.data.DataLoader(
+        dataset, batch_size=int(config[&quot;batch_size&quot;] / world_size),
+        num_workers=1, sampler=train_sampler,
+    )
+    # setup model/optimizer
+    model = MyModel().cuda()
+    optimizer = SGD(model.parameters(), lr=0.01)
+    # Specific torch.distributed
+    model = DDP(model, device_ids=[rank])
+
+    # everything else is almost same as single GPU training ...
+
+
+def main():
+    dist.init_process_group(backend, init_method=&quot;env://&quot;)
+    training()
+    dist.destroy_process_group()
+</code></pre></div></section><section><h4 id=in-practice-with-pytorch-ignite>In practice with PyTorch-Ignite</h4><div style=font-size:18px><pre><code class=language-python># Run as
+# python -m torch.distributed.launch --nproc_per_node N --use_env main_ignite.py
+import ignite.distributed as idist
+
+def training(rank):
+    config = ...
+    rank, world_size = idist.get_rank(), idist.get_world_size()
+    # ... setup the data ...
+    train_loader = idist.auto_dataloader(dataset, batch_size=config[&quot;batch_size&quot;])
+    # setup model/optimizer
+    model = idist.auto_model(MyModel())
+    optimizer = idist.auto_optim(SGD(model.parameters(), lr=0.01))
+
+    # everything else is almost same as single GPU training ...
+
+
+def main():
+    with idist.Parallel(backend=&quot;nccl&quot;) as parallel:
+        parallel.run(training)
+</code></pre></div><ul><li>Collective operations: <code>all_reduce</code>, <code>all_gather</code>, and more</li><li>Metric computation is auto adapted to DDP</li><li><a href=https://pytorch-ignite.ai/blog/distributed-made-easy-with-ignite/>https://pytorch-ignite.ai/blog/distributed-made-easy-with-ignite/</a></li></ul></section></section><section><section data-shortcode-section><h1 id=special-topics>Special topics</h1><h2 id=2-py_config_runnerhttpsgithubcomvfdev-5py_config_runner>2) <a href=https://github.com/vfdev-5/py_config_runner><code>py_config_runner</code></a></h2><p>Python configuration file and command line executable to run a script with.</p><pre><code class=language-bash>$ py_config_runner training.py configs/train/baseline.py
+</code></pre></section><section><h3 id=why-a-python-file-as-configuration>Why a python file as configuration?</h3><ul><li>Configuration of any complexity</li><li>No need to serialize the configuration</li><li>No need other meta-languages for the configuration</li></ul></section><section><h3 id=trade-off->Trade-off ?</h3><ul><li><p>Pros:</p><ul><li>configuration as is without thinking about deserialization and related limitations and errors</li><li>simple to compare between files</li></ul></li><li><p>Cons:</p><ul><li>where is a split between config and code ?</li><li>not obvious to use with external hyperparameter tuning systems</li><li>heavy <code>import</code> headers</li></ul></li></ul></section><section><h3 id=usage>Usage:</h3><ul><li>Example files structure</li></ul><pre><code>|
+|- config
+|    |--- train / baseline.py
+|    |--- inference / baseline.py
+|
+|- training.py
+|- inference.py
+</code></pre></section><section><ul><li>Configuration:</li></ul><div style=font-size:18px><pre><code class=language-python># config / train / baseline.py
+import os
+from torch import nn
+from torch.optim import SGD
+from torchvision.transforms import Compose, ToTensor, Normalize, RandomHorizontalFlip
+from torchvision.models import resnet18
+
+# module from the example
+from utils import get_mnist_data_loaders
+
+seed = 12
+debug = False
+train_batch_size = 128
+val_batch_size = 512
+
+
+train_transform = Compose([RandomHorizontalFlip(), ToTensor(), Normalize((0.1307,), (0.3081,))])
+val_transform = Compose([ToTensor(), Normalize((0.1307,), (0.3081,))])
+
+
+path = os.getenv(&quot;DATASET_PATH&quot;, &quot;/tmp/mnist&quot;)
+train_loader, val_loader = get_mnist_data_loaders(
+    path, train_transform, train_batch_size, val_transform, val_batch_size
+)
+
+model = resnet18(num_classes=10)
+model.conv1 = nn.Conv2d(1, 64, 3)
+
+optimizer = SGD(model.parameters(), lr=0.01)
+criterion = nn.CrossEntropyLoss()
+
+num_epochs = 5
+val_interval = 2
+</code></pre></div></section><section><ul><li>Script consuming python configuration:</li></ul><div style=font-size:18px><pre><code class=language-python># training.py
+
+# Required by py_config_runner
+def run(config, **kwargs):
+
+    print(config.num_epochs)
+    print(config[&quot;val_interval&quot;])
+    assert &quot;model&quot; in config
+    assert &quot;optimizer&quot; in config
+
+</code></pre></div></section><section><ul><li>Script consuming python configuration:</li></ul><div style=font-size:18px><pre><code class=language-python># training.py
+from py_config_runner import get_params
+# this config schema can be imported if torch is installed
+from py_config_runner import TrainConfigSchema
+
+# TrainConfigSchema requires parameters:
+# https://py-config-runner.readthedocs.io/en/latest/config_utils.html#py_config_runner.config_utils.TrainConfigSchema
+# - train_loader (torch DataLoader or Iterable)
+# - num_epochs (int)
+# - criterion (torch.nn.Module)
+# - optimizer (Any)
+# - device (str), default &quot;cuda&quot; (Optional)
+# - model (torch.nn.Module)
+# - seed (int)
+# - debug (bool), default False (Optional)
+
+# Required by py_config_runner
+def run(config, **kwargs):
+
+    # Let's validate the config
+    # against built-in TrainConfigSchema
+    TrainConfigSchema.validate(config)
+
+    print(&quot;Configuration: &quot;)
+    for k, v in get_params(config, TrainConfigSchema).items():
+        print(f&quot;\t{k}: {v}&quot;)
+
+</code></pre></div></section><section><ul><li>Script consuming python configuration:</li></ul><div style=font-size:18px><pre><code class=language-python># training.py
+from typing import Any, Iterable
+from py_config_runner import Schema, get_params
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
+
+class TorchTrainingConfigSchema(Schema):
+    # Define required parameters for another training config
+    # Type hints are from typing
+    seed: int
+    debug: bool
+
+    num_epochs: int
+
+    train_loader: DataLoader
+    val_loader: DataLoader
+
+    model: nn.Module
+    criterion: nn.Module
+    optimizer: optim.Optimizer
+
+
+# Required by py_config_runner
+def run(config, **kwargs):
+    # Let's validate the config
+    TorchTrainingConfigSchema.validate(config)
+
+    print(&quot;Configuration: &quot;)
+    for k, v in get_params(config, TorchTrainingConfigSchema).items():
+        print(f&quot;\t{k}: {v}&quot;)
+
+    device = config.get(&quot;device&quot;, &quot;cuda&quot;)
+    model = config.model
+    model.to(device)
+
+    criterion = config.criterion
+    optimizer = config.optimizer
+
+    ...
+</code></pre><pre><code class=language-bash>$ py_config_runner training.py configs/train/baseline.py
+</code></pre></div></section></section><section><table><tr><td><h2 id=thanks-for-your-attention->Thanks for your attention !</h2><p><em>Questions?</em></p><p>🙋👩‍💻🙋👨‍💻👩‍💻</p></td><td style="border:1px solid #000"><p>Follow us on</p><a class=level-item href=https://www.twitter.com/pytorch_ignite><span class=icon><i class="fab fa-twitter"></i></span></a><a class=level-item href=https://www.facebook.com/PyTorch-Ignite-Community-105837321694508><span class=icon><i class="fab fa-facebook"></i></span></a><a class=level-item href=https://dev.to/pytorch-ignite><span class=icon><i class="fab fa-dev"></i></span></a><p>and check out our new website:</p><p><a href=https://pytorch-ignite.ai>https://pytorch-ignite.ai</a></p></td></tr></table></section></div><style type=text/css>#footer-left{position:absolute;bottom:0%;left:50%;margin-right:-50%;transform:translate(-50%,-50%)}</style><footer class=footer>Python Bucaramanga - 2021/10/09 ○ pytorch-ignite.ai</footer></div><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-hugo/object-assign.js></script><a href=/pybucaramanga-pytorch-ignite-slides/reveal-js/css/print/ id=print-location style=display:none></a><script type=text/javascript>var printLocationElement=document.getElementById('print-location');var link=document.createElement('link');link.rel='stylesheet';link.type='text/css';link.href=printLocationElement.href+(window.location.search.match(/print-pdf/gi)?'pdf.css':'paper.css');document.getElementsByTagName('head')[0].appendChild(link);</script><script type=application/json id=reveal-hugo-site-params>{"custom_theme":"pytorch-ignite-theme.scss","custom_theme_compile":true,"height":720,"highlight_theme":"monokai-sublime","slide_number":true,"transition_speed":"fast","width":1280}</script><script type=application/json id=reveal-hugo-page-params>null</script><script src=/pybucaramanga-pytorch-ignite-slides/reveal-js/js/reveal.js></script><script type=text/javascript>function camelize(map){if(map){Object.keys(map).forEach(function(k){newK=k.replace(/(\_\w)/g,function(m){return m[1].toUpperCase()});if(newK!=k){map[newK]=map[k];delete map[k];}});}
+return map;}
+var revealHugoDefaults={center:true,controls:true,history:true,progress:true,transition:"slide"};var revealHugoSiteParams=JSON.parse(document.getElementById('reveal-hugo-site-params').innerHTML);var revealHugoPageParams=JSON.parse(document.getElementById('reveal-hugo-page-params').innerHTML);var options=Object.assign({},camelize(revealHugoDefaults),camelize(revealHugoSiteParams),camelize(revealHugoPageParams));Reveal.initialize(options);</script><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-js/plugin/markdown/marked.js></script><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-js/plugin/markdown/markdown.js></script><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-js/plugin/highlight/highlight.js></script><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-js/plugin/zoom-js/zoom.js></script><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-js/plugin/notes/notes.js></script><style>#logo{position:absolute;top:20px;left:20px;width:150px}</style><img id=logo src=https://raw.githubusercontent.com/pytorch/ignite/master/assets/logo/ignite_logomark.svg alt>
+<link rel="shortcut icon" href=https://raw.githubusercontent.com/pytorch/ignite/master/assets/logo/ignite_logomark.svg><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css><link rel=stylesheet href=https://rsms.me/inter/inter.css></body></html>

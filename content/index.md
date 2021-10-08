@@ -56,7 +56,7 @@ Software Engineer at <a href="https://www.quansight.com/">Quansight</a> working 
 Taras <a href="https://github.com/trsvchn">@trsvchn</a>
 </td>
 <td style="font-size: 20px;">
-... BIO to put here ...
+OpenSource Enthusiast with MS degree in Biology
 </td>
 </tr>
 

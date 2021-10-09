@@ -66,7 +66,8 @@ OpenSource Enthusiast with MS degree in Biology
 
 # Content
 
-- PyTorch-Ignite: what and why?
-- Quick-start example
-- Convert PyTorch to Ignite
-- About the project
+0. What is _PyTorch_ ?
+1. What is _PyTorch-Ignite_ ?
+2. Quick-start _PyTorch-Ignite_ example
+3. Convert PyTorch to PyTorch+Ignite
+4. About the _PyTorch-Ignite_ project

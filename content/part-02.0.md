@@ -190,6 +190,12 @@ Validation Results - Epoch[5] Avg accuracy: 0.99 Avg loss: 0.03
 
 ---
 
+### Inspect results in Tensorboard
+
+<img height="540" src="images/tensorboard.png"/>
+
+---
+
 ### Complete code
 
 - https://pytorch-ignite.ai/tutorials/getting-started

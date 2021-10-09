@@ -1,5 +1,5 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><title>PyTorch-Ignite: train and evaluate neural networks flexibly and transparently</title><meta name=apple-mobile-web-app-capable content="yes"><meta name=apple-mobile-web-app-status-bar-style content="black-translucent"><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/reveal-js/css/reset.css><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/reveal-js/css/reveal.css><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/_.min.92f64515320309568348a63a98095e2ea25df2bc674d324a1f8ab400c2feb87a.css id=theme><link rel=stylesheet href=/pybucaramanga-pytorch-ignite-slides/highlight-js/monokai-sublime.min.css></head><body><style>#logo{position:absolute;top:1%;left:1%;width:15%}</style><img id=logo src=https://raw.githubusercontent.com/pytorch/ignite/master/assets/logo/ignite_logomark.svg alt><div class=reveal><div class=slides><section><h1 id=pytorch-ignite>PyTorch-Ignite</h1><blockquote><p>Training and evaluating neural networks
-flexibly and transparently</p></blockquote><p>Priyansi & Victor & Taras</p><div class=container><div class=columns><div class=column><div class=level-left><a class=level-item href=https://www.github.com/pytorch/ignite><span class=icon><i class="fab fa-github"></i></span></a><a class=level-item href=https://www.twitter.com/pytorch_ignite><span class=icon><i class="fab fa-twitter"></i></span></a><a class=level-item href=https://www.facebook.com/PyTorch-Ignite-Community-105837321694508><span class=icon><i class="fab fa-facebook"></i></span></a><a class=level-item href=https://dev.to/pytorch-ignite><span class=icon><i class="fab fa-dev"></i></span></a><a class=level-item href=https://discord.gg/djZtm3EmKj><span class=icon><i class="fab fa-discord"></i></span></a></div></div></div></div><p><div style=color:transparent>.</div><div style=color:transparent>.</div></p><p>Slides: <a href=https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/>https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/</a></p></section><section><table class=center><tr><td><img width=80 src="https://avatars.githubusercontent.com/u/13217677?v=4"></td><td>Priyansi <a href=https://github.com/Priyansi>@Priyansi</a></td><td style=font-size:20px>CS Undergrad working on revamping PyTorch-Ignite's docs and managing the community</td></tr><tr><td><img width=80 src="https://avatars.githubusercontent.com/u/2459423?v=4"></td><td>Victor <a href=https://github.com/vfdev-5>@vfdev-5</a></td><td style=font-size:20px>Software Engineer at <a href=https://www.quansight.com/>Quansight</a> working on AI-related open source projects</td></tr><tr><td><img width=80 src="https://avatars.githubusercontent.com/u/30748114?v=4"></td><td>Taras <a href=https://github.com/trsvchn>@trsvchn</a></td><td style=font-size:20px>OpenSource Enthusiast with MS degree in Biology</td></tr></table></section><section><h1 id=content>Content</h1><ul><li>PyTorch-Ignite: what and why?</li><li>Quick-start example</li><li>Convert PyTorch to Ignite</li><li>About the project</li></ul></section><section><section data-shortcode-section><h1 id=pytorch-in-a-nutshell>PyTorch in a nutshell</h1><table style=font-size:20px><tr><td><pre><code class=language-python>import torch
+flexibly and transparently</p></blockquote><p>Priyansi & Victor & Taras</p><div class=container><div class=columns><div class=column><div class=level-left><a class=level-item href=https://www.github.com/pytorch/ignite><span class=icon><i class="fab fa-github"></i></span></a><a class=level-item href=https://www.twitter.com/pytorch_ignite><span class=icon><i class="fab fa-twitter"></i></span></a><a class=level-item href=https://www.facebook.com/PyTorch-Ignite-Community-105837321694508><span class=icon><i class="fab fa-facebook"></i></span></a><a class=level-item href=https://dev.to/pytorch-ignite><span class=icon><i class="fab fa-dev"></i></span></a><a class=level-item href=https://discord.gg/djZtm3EmKj><span class=icon><i class="fab fa-discord"></i></span></a></div></div></div></div><p><div style=color:transparent>.</div><div style=color:transparent>.</div></p><p>Slides: <a href=https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/>https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/</a></p></section><section><table class=center><tr><td><img width=80 src="https://avatars.githubusercontent.com/u/13217677?v=4"></td><td>Priyansi <a href=https://github.com/Priyansi>@Priyansi</a></td><td style=font-size:20px>CS Undergrad working on revamping PyTorch-Ignite's docs and managing the community</td></tr><tr><td><img width=80 src="https://avatars.githubusercontent.com/u/2459423?v=4"></td><td>Victor <a href=https://github.com/vfdev-5>@vfdev-5</a></td><td style=font-size:20px>Software Engineer at <a href=https://www.quansight.com/>Quansight</a> working on AI-related open source projects</td></tr><tr><td><img width=80 src="https://avatars.githubusercontent.com/u/30748114?v=4"></td><td>Taras <a href=https://github.com/trsvchn>@trsvchn</a></td><td style=font-size:20px>OpenSource Enthusiast with MS degree in Biology</td></tr></table></section><section><h1 id=content>Content</h1><ol start=0><li>What is <em>PyTorch</em> ?</li><li>What is <em>PyTorch-Ignite</em> ?</li><li>Quick-start <em>PyTorch-Ignite</em> example</li><li>Convert PyTorch to PyTorch+Ignite</li><li>About the <em>PyTorch-Ignite</em> project</li></ol></section><section><section data-shortcode-section><h1 id=pytorch-in-a-nutshell>PyTorch in a nutshell</h1><table style=font-size:20px><tr><td><pre><code class=language-python>import torch
 import torch.nn as nn
 
 device = &quot;cuda&quot;
@@ -73,7 +73,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
 def train(dataloader, model, loss_fn, optimizer):
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
+    for X, y in dataloader:
         X, y = X.to(device), y.to(device)
         pred = model(X)
         loss = loss_fn(pred, y)
@@ -102,6 +102,7 @@ max_epochs = 10
 validate_every = 100
 checkpoint_every = 100
 
+
 def validate(model, val_loader):
     model = model.eval()
     num_correct = 0
@@ -117,9 +118,12 @@ def validate(model, val_loader):
 
 def checkpoint(model, optimizer, checkpoint_dir):
     # ...
-    pass
+
+def save_best_model(model, current_accuracy, best_accuracy):
+    # ...
 
 iteration = 0
+best_accuracy = 0.0
 
 for epoch in range(max_epochs):
     for batch in train_loader:
@@ -135,6 +139,7 @@ for epoch in range(max_epochs):
             binary_accuracy = validate(model, val_loader)
             print(&quot;After {} iterations, binary accuracy = {:.2f}&quot;
                   .format(iteration, binary_accuracy))
+            save_best_model(model, binary_accuracy, best_accuracy)
 
         if iteration % checkpoint_every == 0:
             checkpoint(model, optimizer, checkpoint_dir)
@@ -176,7 +181,7 @@ trainer.add_event_handler(
   handler,
   {'model': model}
 )
-</code></pre></td></tr></table></section><section><h1 id=key-concepts-in-a-nutshell>Key concepts in a nutshell</h1><h4 id=pytorch-ignite-is-about>PyTorch-Ignite is about:</h4><ol><li>Engine and Event System</li><li>Out-of-the-box metrics to easily evaluate models</li><li>Built-in handlers to compose training pipeline</li><li>Distributed Training support</li></ol></section><section><h1 id=what-makes-pytorch-ignite-unique->What makes PyTorch-Ignite unique ?</h1><ul><li>Composable and interoperable components</li><li>Simple and understandable code</li><li>Open-source community involvement</li></ul></section><section><h1 id=how-pytorch-ignite-makes-users-live-easier->How PyTorch-Ignite makes user&rsquo;s live easier ?</h1><p>With PyTorch-Ignite:</p><ul><li>Less code than pure PyTorch while ensuring maximum control and simplicity</li><li>Easily get more refactored and structured code</li><li>Extensible API for metrics, experiment managers, and other components</li><li>Same code for non-distributed and distributed configs</li></ul></section><section><p>Any questions before we go on ?</p></section></section><section><section data-shortcode-section><h1 id=quick-start-example->Quick-Start Example 👩‍💻👨‍💻</h1><p>Let&rsquo;s train a MNIST classifier with PyTorch-Ignite!</p></section><section><h3 id=-installation->⬇️ Installation ⬇️</h3><p>Install PyTorch and TorchVision</p><pre><code class=language-bash>$ pip install torch torchvision
+</code></pre></td></tr></table></section><section><h1 id=key-concepts-in-a-nutshell>Key concepts in a nutshell</h1><h4 id=pytorch-ignite-is-about>PyTorch-Ignite is about:</h4><ol><li>Engine and Event System</li><li>Out-of-the-box metrics to easily evaluate models</li><li>Built-in handlers to compose training pipeline</li><li>Distributed Training support</li></ol></section><section><h1 id=what-makes-pytorch-ignite-unique->What makes PyTorch-Ignite unique ?</h1><ul><li>Composable and interoperable components</li><li>Simple and understandable code</li><li>Open-source community involvement</li></ul></section><section><h1 id=how-pytorch-ignite-makes-users-live-easier->How PyTorch-Ignite makes user&rsquo;s live easier ?</h1><p>With PyTorch-Ignite:</p><ul><li>Less code than pure PyTorch while ensuring maximum control and simplicity</li><li>Easily get more refactored and structured code</li><li>Extensible API for metrics, experiment managers, and other components</li><li>Same code for non-distributed and distributed configs</li></ul></section></section><section><section data-shortcode-section><h1 id=quick-start-example->Quick-Start Example 👩‍💻👨‍💻</h1><p>Let&rsquo;s train a MNIST classifier with PyTorch-Ignite!</p></section><section><h3 id=-installation->⬇️ Installation ⬇️</h3><p>Install PyTorch and TorchVision</p><pre><code class=language-bash>$ pip install torch torchvision
 </code></pre><p>Install PyTorch-Ignite</p><p>via <code>pip</code> 📦</p><pre><code class=language-bash>$ pip install pytorch-ignite
 </code></pre><p>or <code>conda</code> 🐍</p><pre><code class=language-bash>$ conda install ignite -c pytorch
 </code></pre></section><section><h3 id=-imports->📦 Imports 📦</h3><pre><code class=language-python data-line-numbers=1-6|8-12>import torch

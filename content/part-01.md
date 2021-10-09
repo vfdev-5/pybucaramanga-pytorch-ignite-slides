@@ -179,10 +179,14 @@ def train(dataloader, model, loss_fn, optimizer):
         loss.backward()
         optimizer.step()
 
+def test(dataloader, model, loss_fn):
+    # code to compute and print average loss and accuracy
+
 epochs = 5
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, loss_fn, optimizer)
+    test(test_dataloader, model, loss_fn)
 print("Done!")
 ```
 

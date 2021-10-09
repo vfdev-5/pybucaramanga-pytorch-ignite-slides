@@ -22,8 +22,7 @@ Slides: https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/
 
 ---
 
-<table>
-
+<table class="center">
 <tr>
 <td>
 <img width=80 src="https://avatars.githubusercontent.com/u/13217677?v=4" />
@@ -32,10 +31,9 @@ Slides: https://vfdev-5.github.io/pybucaramanga-pytorch-ignite-slides/
 Priyansi <a href="https://github.com/Priyansi">@Priyansi</a>
 </td>
 <td style="font-size: 20px;">
-CS Undergrad working on revamping PyTorch-Ignite's docs and managing the community 
+CS Undergrad working on revamping PyTorch-Ignite's docs and managing the community
 </td>
 </tr>
-
 <tr>
 <td>
 <img width=80 src="https://avatars.githubusercontent.com/u/2459423?v=4" />
@@ -68,7 +66,8 @@ OpenSource Enthusiast with MS degree in Biology
 
 # Content
 
-- PyTorch-Ignite: what and why?
-- Quick-start example
-- Convert PyTorch to Ignite
-- About the project
+0. What is _PyTorch_ ?
+1. What is _PyTorch-Ignite_ ?
+2. Quick-start _PyTorch-Ignite_ example
+3. Convert PyTorch to PyTorch+Ignite
+4. About the _PyTorch-Ignite_ project

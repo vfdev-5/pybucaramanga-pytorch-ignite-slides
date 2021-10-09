@@ -30,7 +30,7 @@ $ conda install ignite -c pytorch
 
 ---
 
-### 📦➡️ Importation ⬅️📦
+### 📦 Imports 📦
 
 ```python{1-6|8-12}
 import torch

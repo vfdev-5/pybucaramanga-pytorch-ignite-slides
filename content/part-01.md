@@ -169,7 +169,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
 def train(dataloader, model, loss_fn, optimizer):
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
+    for X, y in dataloader:
         X, y = X.to(device), y.to(device)
         pred = model(X)
         loss = loss_fn(pred, y)
@@ -223,6 +223,7 @@ max_epochs = 10
 validate_every = 100
 checkpoint_every = 100
 
+
 def validate(model, val_loader):
     model = model.eval()
     num_correct = 0
@@ -238,9 +239,12 @@ def validate(model, val_loader):
 
 def checkpoint(model, optimizer, checkpoint_dir):
     # ...
-    pass
+
+def save_best_model(model, current_accuracy, best_accuracy):
+    # ...
 
 iteration = 0
+best_accuracy = 0.0
 
 for epoch in range(max_epochs):
     for batch in train_loader:
@@ -256,6 +260,7 @@ for epoch in range(max_epochs):
             binary_accuracy = validate(model, val_loader)
             print("After {} iterations, binary accuracy = {:.2f}"
                   .format(iteration, binary_accuracy))
+            save_best_model(model, binary_accuracy, best_accuracy)
 
         if iteration % checkpoint_every == 0:
             checkpoint(model, optimizer, checkpoint_dir)
@@ -365,11 +370,6 @@ With PyTorch-Ignite:
 - Easily get more refactored and structured code
 - Extensible API for metrics, experiment managers, and other components
 - Same code for non-distributed and distributed configs
-
-
----
-
-Any questions before we go on ?
 
 <!-- End vertical slides -->
 {{% /section %}}

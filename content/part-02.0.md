@@ -206,5 +206,10 @@ https://code-generator.pytorch-ignite.ai/
 
 </div>
 
+---
+
+Any questions before we go on ?
+
+
 <!-- End vertical slides -->
 {{% /section %}}

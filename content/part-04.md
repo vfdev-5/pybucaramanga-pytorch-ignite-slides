@@ -56,13 +56,15 @@ More details here: https://pytorch-ignite.ai/ecosystem/
 - Google Season of Docs 2021
   - Working with great tech writer (_Priyansi_)
 
-- Hacktoberfest 2020 and coming up 2021
+- Hacktoberfest 2020 and 2021
 
 - PyData Global Mentored Sprint 2020 and coming up 2021 (End of October)
 
-- Our [new website](https://pytorch-ignite.ai) development (thanks to _Jeff Yang_!)
+- Our [new website](https://pytorch-ignite.ai) development
 
 - [PyTorch-Ignite Code-Generator project](https://code-generator.pytorch-ignite.ai)
+
+- Public meetings on Discord, open to everyone
 
 _Stay tuned for upcoming events ..._
 
@@ -72,6 +74,17 @@ _Stay tuned for upcoming events ..._
 <img width="150" src="https://pydata.org/global2021/wp-content/uploads/2021/06/logo.png">
 
 </div>
+
+---
+
+# <img width="50" src="https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg"> Hacktoberfest 2021 <img width="50" src="https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg">
+
+
+The repositories participating:
+- PyTorch-Ignite: https://github.com/pytorch/ignite
+- Code Generator: https://github.com/pytorch-ignite/code-generator
+- Examples: https://github.com/pytorch-ignite/examples
+
 
 ---
 

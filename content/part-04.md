@@ -77,7 +77,8 @@ _Stay tuned for upcoming events ..._
 
 ---
 
-# <img width="50" src="https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg"> Hacktoberfest 2021 <img width="50" src="https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg">
+# <img width="50" src="https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg"> [Hacktoberfest 2021](https://hacktoberfest.digitalocean.com/) <img width="50" src="https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg">
+
 
 
 The repositories participating:
@@ -85,6 +86,17 @@ The repositories participating:
 - Code Generator: https://github.com/pytorch-ignite/code-generator
 - Examples: https://github.com/pytorch-ignite/examples
 
+{{< add_vspace >}}
+
+How it works:
+<div style="font-size: 22px;">
+
+- Read our project's Contributing Guidelines
+- Check out and pick an issue from the list of "Help-wanted" issues
+  - Comment out that you would like to tackle the issue
+- Any questions on the issue => reach out to us on GH or Discord for more guidance
+
+</div>
 
 ---
 
@@ -110,7 +122,7 @@ Everyone is welcome to contribute
 #### How to start:
 
 - Read our [Contributing guides](https://github.com/pytorch/ignite/blob/master/CONTRIBUTING.md)
-- Pick [List of Help-wanted GH issue](https://github.com/pytorch/ignite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+- Pick [List of Help-wanted GH issues](https://github.com/pytorch/ignite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
 - Reach out to us on GH or Discord for more guidance
 
 <!-- End vertical slides -->

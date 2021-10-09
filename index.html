@@ -22,7 +22,73 @@ class MyNN(nn.Module):
         return logits
 
 model = MyNN().to(device)
-</code></pre></td><td><div style=color:transparent>.</div><ul><li>tensor manipulations (device: CPUs, GPUs, TPUs)</li><li>NN components, optimizers, loss functions</li><li>Distributed computations</li><li>Profiling</li><li>other cool features &mldr;</li><li>Domain libraries: vision, text, audio</li><li>Rich ecosystem</li></ul></td></tr></table><p><a href=https://pytorch.org/tutorials/beginner/basics/intro.html>https://pytorch.org/tutorials/beginner/basics/intro.html</a></p></section><section><h2 id=why-using-pytorch-without-ignite-is-suboptimal->Why using PyTorch without Ignite is suboptimal ?</h2><p>For NN training and evaluation:</p><ul><li>PyTorch gives only &ldquo;low&rdquo;-level building components</li><li>Common bricks to code in any user project:<ul><li>metrics</li><li>checkpointing, best model saving, early stopping, &mldr;</li><li>logging to experiment tracking systems</li><li>code adaptation for device (e.g. GPU, XLA)</li></ul></li></ul></section><section><ul><li>Pure PyTorch code</li></ul><div style=font-size:20px><pre><code class=language-python>
+</code></pre></td><td><div style=color:transparent>.</div><ul><li>tensor manipulations (device: CPUs, GPUs, TPUs)</li><li>NN components, optimizers, loss functions</li><li>Distributed computations</li><li>Profiling</li><li>other cool features &mldr;</li><li>Domain libraries: vision, text, audio</li><li>Rich ecosystem</li></ul></td></tr></table><p><a href=https://pytorch.org/tutorials/beginner/basics/intro.html>https://pytorch.org/tutorials/beginner/basics/intro.html</a></p></section><section><h1 id=quick-start-ml-with-pytorch>Quick-start ML with PyTorch</h1><div style=font-size:20px><p><a href=https://pytorch.org/tutorials/beginner/basics/quickstart_tutorial.html>Computer Vision example with Fashion MNIST</a></p><p>Problem: 1 - how to classify images ?</p><p><code>model(image) -> predicted label</code></p><p>2 - How measure model performances ?</p><p><code>predicted labels vs correct labels</code></p><p><img height=300 src=https://image.itmedia.co.jp/ait/articles/2005/28/di-01.gif></p></section><section><h1 id=quick-start-ml-with-pytorch-1>Quick-start ML with PyTorch</h1><div style=font-size:20px><ul><li>Setup training and testing data</li></ul><pre><code class=language-python>from torch.utils.data import DataLoader
+from torchvision import datasets
+from torchvision.transforms import ToTensor, Lambda, Compose
+
+# Setup training/test data
+training_data = datasets.FashionMNIST(root=&quot;data&quot;, train=True, download=True, transform=ToTensor())
+test_data = datasets.FashionMNIST(root=&quot;data&quot;, train=False, transform=ToTensor())
+
+batch_size = 64
+
+# Create data loaders
+train_dataloader = DataLoader(training_data, batch_size=batch_size)
+test_dataloader = DataLoader(test_data, batch_size=batch_size)
+
+# Optionally, for debugging:
+for X, y in test_dataloader:
+    print(&quot;Shape of X [N, C, H, W]: &quot;, X.shape)
+    print(&quot;Shape of y: &quot;, y.shape, y.dtype)
+    break
+
+# Output:
+# Shape of X [N, C, H, W]:  torch.Size([64, 1, 28, 28])
+# Shape of y:  torch.Size([64]) torch.int64
+</code></pre></div></section><section><h1 id=quick-start-ml-with-pytorch-2>Quick-start ML with PyTorch</h1><div style=font-size:20px><ul><li>Create a model</li></ul><pre><code class=language-python>import torch
+from torch import nn
+
+device = &quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;
+
+class NeuralNetwork(nn.Module):
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+        self.flatten = nn.Flatten()
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(28*28, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 10)
+        )
+
+    def forward(self, x):
+        x = self.flatten(x)
+        logits = self.linear_relu_stack(x)
+        return logits
+
+model = NeuralNetwork().to(device)
+</code></pre></div></section><section><h1 id=quick-start-ml-with-pytorch-3>Quick-start ML with PyTorch</h1><div style=font-size:20px><ul><li>Model training<ul><li>Loss function: cross-entropy</li><li>Optimization with Stochastic Gradient Descent</li></ul></li></ul><pre><code class=language-python>loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
+
+def train(dataloader, model, loss_fn, optimizer):
+    model.train()
+    for batch, (X, y) in enumerate(dataloader):
+        X, y = X.to(device), y.to(device)
+        pred = model(X)
+        loss = loss_fn(pred, y)
+
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+epochs = 5
+for t in range(epochs):
+    print(f&quot;Epoch {t+1}\n-------------------------------&quot;)
+    train(train_dataloader, model, loss_fn, optimizer)
+print(&quot;Done!&quot;)
+</code></pre></div></section><section><h2 id=why-using-pytorch-without-ignite-is-suboptimal->Why using PyTorch without Ignite is suboptimal ?</h2><p>For NN training and evaluation:</p><ul><li>PyTorch gives only &ldquo;low&rdquo;-level building components</li><li>Common bricks to code in any user project:<ul><li>metrics</li><li>checkpointing, best model saving, early stopping, &mldr;</li><li>logging to experiment tracking systems</li><li>code adaptation for device (e.g. GPU, XLA)</li></ul></li></ul></section><section><ul><li>Pure PyTorch code</li></ul><div style=font-size:20px><pre><code class=language-python>
 model = Net()
 train_loader, val_loader = get_data_loaders(train_batch_size, val_batch_size)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.8)
@@ -106,46 +172,7 @@ trainer.add_event_handler(
   handler,
   {'model': model}
 )
-</code></pre></td></tr></table></section><section><h1 id=key-concepts-in-a-nutshell>Key concepts in a nutshell</h1><h4 id=pytorch-ignite-is-about>PyTorch-Ignite is about:</h4><ol><li>Engine and Event System</li><li>Out-of-the-box metrics to easily evaluate models</li><li>Built-in handlers to compose training pipeline</li><li>Distributed Training support</li></ol></section><section><h1 id=what-makes-pytorch-ignite-unique->What makes PyTorch-Ignite unique ?</h1><ul><li>Composable and interoperable components</li><li>Simple and understandable code</li><li>Open-source community involvement</li></ul></section><section><h1 id=how-pytorch-ignite-makes-users-live-easier->How PyTorch-Ignite makes user&rsquo;s live easier ?</h1><p>With PyTorch-Ignite:</p><ul><li>Less code than pure PyTorch while ensuring maximum control and simplicity</li><li>Easily get more refactored and structured code</li><li>Extensible API for metrics, experiment managers, and other components</li><li>Same code for non-distributed and distributed configs</li></ul></section><section><h1 id=global-picture>Global picture</h1><div style=font-size:18px><pre><code class=language-python>import ignite.distributed as idist
-from ignite.engine import Engine, Events
-from ignite.metrics import Accuracy, Loss
-from ignite.contrib.engines import common
-
-
-def initialize():
-  # Pure pytorch code ...
-  return model, optimizer, criterion
-
-
-def training():
-    train_loader, test_loader = get_data_loaders(train_batch_size, val_batch_size)
-    model, optimizer, criterion = initialize()
-
-    trainer: Engine = create_trainer(model, optimizer, criterion)
-    metrics = {
-        &quot;Accuracy&quot;: Accuracy(), &quot;Loss&quot;: Loss(criterion),
-    }
-    evaluator: Engine = create_evaluator(model, metrics=metrics)
-
-    @trainer.on(Events.EPOCH_COMPLETED(every=3) | Events.COMPLETED)
-    def run_validation(engine):
-        evaluator.run(test_loader)
-
-    if rank == 0:
-        evaluators = {&quot;test&quot;: evaluator, }
-        tb_logger = common.setup_tb_logging(output_path, trainer, optimizer, evaluators=evaluators)
-
-    trainer.run(train_loader, max_epochs=100)
-
-    if rank == 0:
-        tb_logger.close()
-
-def main():
-    backend = None # &quot;nccl&quot;, &quot;gloo&quot;, &quot;xla-tpu&quot;, &quot;horovod&quot;
-    with idist.Parallel(backend=backend) as parallel:
-        parallel.run(training)
-
-</code></pre></div></section></section><section><section data-shortcode-section><h1 id=quick-start-example->Quick-Start Example 👩‍💻👨‍💻</h1><p>Let&rsquo;s train a MNIST classifier with PyTorch-Ignite!</p><ul><li><a href=https://colab.research.google.com/github/pytorch-ignite/pytorch-ignite.ai/blob/gh-pages/tutorials/getting-started.ipynb>Link on Colab</a></li></ul></section><section><h3 id=-installation->⬇️ Installation ⬇️</h3><p>via <code>pip</code> 📦</p><pre><code class=language-bash>$ pip install pytorch-ignite
+</code></pre></td></tr></table></section><section><h1 id=key-concepts-in-a-nutshell>Key concepts in a nutshell</h1><h4 id=pytorch-ignite-is-about>PyTorch-Ignite is about:</h4><ol><li>Engine and Event System</li><li>Out-of-the-box metrics to easily evaluate models</li><li>Built-in handlers to compose training pipeline</li><li>Distributed Training support</li></ol></section><section><h1 id=what-makes-pytorch-ignite-unique->What makes PyTorch-Ignite unique ?</h1><ul><li>Composable and interoperable components</li><li>Simple and understandable code</li><li>Open-source community involvement</li></ul></section><section><h1 id=how-pytorch-ignite-makes-users-live-easier->How PyTorch-Ignite makes user&rsquo;s live easier ?</h1><p>With PyTorch-Ignite:</p><ul><li>Less code than pure PyTorch while ensuring maximum control and simplicity</li><li>Easily get more refactored and structured code</li><li>Extensible API for metrics, experiment managers, and other components</li><li>Same code for non-distributed and distributed configs</li></ul></section><section><p>Any questions before we go on ?</p></section></section><section><section data-shortcode-section><h1 id=quick-start-example->Quick-Start Example 👩‍💻👨‍💻</h1><p>Let&rsquo;s train a MNIST classifier with PyTorch-Ignite!</p><ul><li><a href=https://colab.research.google.com/github/pytorch-ignite/pytorch-ignite.ai/blob/gh-pages/tutorials/getting-started.ipynb>Link on Colab</a></li></ul></section><section><h3 id=-installation->⬇️ Installation ⬇️</h3><p>via <code>pip</code> 📦</p><pre><code class=language-bash>$ pip install pytorch-ignite
 </code></pre><p>or <code>conda</code> 🐍</p><pre><code class=language-bash>$ conda install ignite -c pytorch
 </code></pre></section><section><h3 id=-importation->📦➡️ Importation ⬅️📦</h3><pre><code class=language-python data-line-numbers=1-6|8-12>import torch
 from torch import nn
@@ -240,7 +267,7 @@ Epoch[5], Iter[2200] Loss: 0.02
 Epoch[5], Iter[2300] Loss: 0.01
 Training Results - Epoch[5] Avg accuracy: 0.99 Avg loss: 0.02
 Validation Results - Epoch[5] Avg accuracy: 0.99 Avg loss: 0.03
-</code></pre></section><section><h3 id=complete-code>Complete code</h3><p><a href=https://pytorch-ignite.ai/tutorials/getting-started>https://pytorch-ignite.ai/tutorials/getting-started</a></p></section><section><h3 id=pytorch-ignite-code-generator>PyTorch-Ignite Code-Generator</h3><img height=300 src=https://raw.githubusercontent.com/pytorch-ignite/code-generator/main/src/assets/code-generator-demo-1080p.gif><div style=font-size:20px><p><a href=https://code-generator.pytorch-ignite.ai/>https://code-generator.pytorch-ignite.ai/</a></p><ul><li><p><strong>What is Code-Generator?</strong>: web app to quickly produce quick-start python code for common training tasks in deep learning.</p></li><li><p><strong>Why to use Code-Generator?</strong>: start working on a task without rewriting everything from scratch.</p></li></ul></div></section></section><section><section data-shortcode-section><h1 id=the-big-picture>The Big Picture</h1><img height=500 src=images/Ignite_Big_Picture.png></section><section><h2 id=engine-and-event-system>Engine and Event System</h2><table style=font-size:20px><tr><td><div style=color:transparent>.</div><ul><li><p><strong>Engine</strong></p><ul><li>Loops on user data</li><li>Applies an arbitrary user function on batches</li></ul></li><li><p><strong>Event system</strong></p><ul><li>Customizable event collections</li><li>Triggers handlers attached to events</li></ul></li></ul></td><td>In its simpliest form:<pre><code class=language-python data-line-numbers=2,5,7|1,3,6,8,10,11>fire_event(Events.STARTED)
+</code></pre></section><section><h3 id=complete-code>Complete code</h3><p><a href=https://pytorch-ignite.ai/tutorials/getting-started>https://pytorch-ignite.ai/tutorials/getting-started</a></p></section><section><h3 id=pytorch-ignite-code-generator>PyTorch-Ignite Code-Generator</h3><img height=300 src=https://raw.githubusercontent.com/pytorch-ignite/code-generator/main/src/assets/code-generator-demo-1080p.gif><div style=font-size:20px><p><a href=https://code-generator.pytorch-ignite.ai/>https://code-generator.pytorch-ignite.ai/</a></p><ul><li><p><strong>What is Code-Generator?</strong>: web app to quickly produce quick-start python code for common training tasks in deep learning.</p></li><li><p><strong>Why to use Code-Generator?</strong>: start working on a task without rewriting everything from scratch.</p></li></ul></div></section><section><p>Any questions before we go on ?</p></section></section><section><section data-shortcode-section><h1 id=the-big-picture>The Big Picture</h1><img height=500 src=images/Ignite_Big_Picture.png></section><section><h2 id=engine-and-event-system>Engine and Event System</h2><table style=font-size:20px><tr><td><div style=color:transparent>.</div><ul><li><p><strong>Engine</strong></p><ul><li>Loops on user data</li><li>Applies an arbitrary user function on batches</li></ul></li><li><p><strong>Event system</strong></p><ul><li>Customizable event collections</li><li>Triggers handlers attached to events</li></ul></li></ul></td><td>In its simpliest form:<pre><code class=language-python data-line-numbers=2,5,7|1,3,6,8,10,11>fire_event(Events.STARTED)
 while epoch &lt; max_epochs:
     fire_event(Events.EPOCH_STARTED)
 
@@ -384,7 +411,7 @@ def training(local_rank, *args, **kwargs):
 backend = 'nccl'  # or 'gloo', 'horovod', 'xla-tpu' or None
 with idist.Parallel(backend) as parallel:
     parallel.run(training)
-</code></pre></div></section><section><h1 id=distributed-training-support-1>Distributed Training support</h1><h2 id=distributed-launchers>Distributed launchers</h2><p>Handle distributed launchers with the same code</p><ul><li><code>torch.multiprocessing.spawn</code></li><li><code>torch.distributed.launch</code></li><li><code>horovodrun</code></li><li><code>slurm</code></li></ul></section><section><h1 id=distributed-training-support-2>Distributed Training support</h1><h2 id=unified-distributed-api>Unified Distributed API</h2><ul><li><p>High-level helper methods</p><ul><li><code>idist.auto_model()</code></li><li><code>idist.auto_optim()</code></li><li><code>idist.auto_dataloader()</code></li></ul></li><li><p>Collective operations</p><ul><li><code>all_reduce</code>, <code>all_gather</code>, and more</li></ul></li></ul></section></section><section><section data-shortcode-section><h1 id=-convert-pytorch-to-ignite->🔥 Convert PyTorch to Ignite ❤️‍🔥</h1><p>How to translate pure PyTorch code to PyTorch+Ignite</p></section><section><h3 id=native-pytorch---pytorch--ignite>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/1.png></section><section><h3 id=native-pytorch---pytorch--ignite-1>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/2.png></section><section><h3 id=native-pytorch---pytorch--ignite-2>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/3.png></section><section><h3 id=native-pytorch---pytorch--ignite-3>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/4.png></section><section><h3 id=native-pytorch---pytorch--ignite-4>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/5.png></section><section><h3 id=native-pytorch---pytorch--ignite-5>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/6.png></section><section><h3 id=native-pytorch---pytorch--ignite-6>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/7.png></section><section><h3 id=native-pytorch---pytorch--ignite-7>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/8.png></section><section><h3 id=native-pytorch---pytorch--ignite-8>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/9.png></section><section><h3 id=native-pytorch---pytorch--ignite-9>Native PyTorch -> PyTorch + Ignite</h3><img height=600 src=images/10.png></section></section><section><section data-shortcode-section><h1 id=about-pytorch-ignite-project>About &ldquo;PyTorch-Ignite&rdquo; project</h1><p>Community-driven open source and <em>NumFOCUS Affiliated</em> Project</p><p>maintained by volunteers in the PyTorch community:</p><pre><code>@vfdev-5, @ydcjeff, @KickItLikeShika, @sdesrozis, @alykhantejani, @anmolsjoshi,
+</code></pre></div></section><section><h1 id=distributed-training-support-1>Distributed Training support</h1><h2 id=distributed-launchers>Distributed launchers</h2><p>Handle distributed launchers with the same code</p><ul><li><code>torch.multiprocessing.spawn</code></li><li><code>torch.distributed.launch</code></li><li><code>horovodrun</code></li><li><code>slurm</code></li></ul></section><section><h1 id=distributed-training-support-2>Distributed Training support</h1><h2 id=unified-distributed-api>Unified Distributed API</h2><ul><li><p>High-level helper methods</p><ul><li><code>idist.auto_model()</code></li><li><code>idist.auto_optim()</code></li><li><code>idist.auto_dataloader()</code></li></ul></li><li><p>Collective operations</p><ul><li><code>all_reduce</code>, <code>all_gather</code>, and more</li></ul></li></ul></section><section><p>Any questions before we go on ?</p></section></section><section><section data-shortcode-section><h1 id=-convert-pytorch-to-ignite->🔥 Convert PyTorch to Ignite ❤️‍🔥</h1><p>How to translate pure PyTorch code to PyTorch+Ignite</p></section><section><h3 id=native-pytorch--pytorch--ignite>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/1.png></section><section><h3 id=native-pytorch--pytorch--ignite-1>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/2.png></section><section><h3 id=native-pytorch--pytorch--ignite-2>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/3.png></section><section><h3 id=native-pytorch--pytorch--ignite-3>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/4.png></section><section><h3 id=native-pytorch--pytorch--ignite-4>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/5.png></section><section><h3 id=native-pytorch--pytorch--ignite-5>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/6.png></section><section><h3 id=native-pytorch--pytorch--ignite-6>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/7.png></section><section><h3 id=native-pytorch--pytorch--ignite-7>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/8.png></section><section><h3 id=native-pytorch--pytorch--ignite-8>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/9.png></section><section><h3 id=native-pytorch--pytorch--ignite-9>Native PyTorch → PyTorch + Ignite</h3><img height=540 src=images/10.png></section><section><p>Any questions before we go on ?</p></section></section><section><section data-shortcode-section><h1 id=about-pytorch-ignite-project>About &ldquo;PyTorch-Ignite&rdquo; project</h1><p>Community-driven open source and <em>NumFOCUS Affiliated</em> Project</p><p>maintained by volunteers in the PyTorch community:</p><pre><code>@vfdev-5, @ydcjeff, @KickItLikeShika, @sdesrozis, @alykhantejani, @anmolsjoshi,
 @trsvchn, @Moh-Yakoub, ..., @fco-dv, @gucifer, @Priyansi, ...
 </code></pre><p><img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-medium/1f389@2x.png alt=o1>
 <img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-medium/1f44f@2x.png alt=o2>
@@ -392,10 +419,10 @@ with idist.Parallel(backend) as parallel:
 <img width=150 src=https://raw.githubusercontent.com/Quansight-Labs/quansight-labs-site/master/files/images/QuansightLabs_logo_V2.png>
 <img width=150 src=https://raw.githubusercontent.com/pytorch-ignite/pytorch-ignite.ai/main/static/_images/ifpen.png>
 <img width=80 src=https://d1.awsstatic.com/logos/aws-logo/full-color/AWS-Logo_Full-Color_1000x600.23165eb2b9af9cc8e068e74fbabc28222d091298.png>
-<img width=150 src=https://raw.githubusercontent.com/pytorch-ignite/pytorch-ignite.ai/main/static/_images/agenium_space.png></section><section><h1 id=projects-using-pytorch-ignite>Projects using PyTorch-Ignite</h1><ul><li>Research Papers</li><li>Blog articles, tutorials, books</li><li>Toolkits<ul><li><a href=https://monai.io/>Project MONAI</a>, <a href=https://nussl.github.io/docs/>Nussl</a>, &mldr;</li></ul></li></ul><p>More details here: <a href=https://pytorch-ignite.ai/ecosystem/>https://pytorch-ignite.ai/ecosystem/</a></p></section><section><h1 id=community-engagement>Community Engagement</h1><div style=font-size:24px><ul><li><p>Google Summer of Code 2021</p><ul><li>Mentored two great students (<em>Ahmed</em> and <em>Arpan</em>)</li></ul></li><li><p>Google Season of Docs 2021</p><ul><li>Working with great tech writer (<em>Priyansi</em>)</li></ul></li><li><p>Hacktoberfest 2020 and coming up 2021</p></li><li><p>PyData Global Mentored Sprint 2020 and coming up 2021 (End of October)</p></li><li><p>Our <a href=https://pytorch-ignite.ai>new website</a> development (thanks to <em>Jeff Yang</em>!)</p></li><li><p><a href=https://code-generator.pytorch-ignite.ai>PyTorch-Ignite Code-Generator project</a></p></li></ul><p><em>Stay tuned for upcoming events &mldr;</em></p><img width=50 src=https://summerofcode.withgoogle.com/static/img/summer-of-code-logo.svg>
+<img width=150 src=https://raw.githubusercontent.com/pytorch-ignite/pytorch-ignite.ai/main/static/_images/agenium_space.png></section><section><h1 id=projects-using-pytorch-ignite>Projects using PyTorch-Ignite</h1><ul><li>Research Papers</li><li>Blog articles, tutorials, books</li><li>Toolkits<ul><li><a href=https://monai.io/>Project MONAI</a>, <a href=https://nussl.github.io/docs/>Nussl</a>, &mldr;</li></ul></li></ul><p>More details here: <a href=https://pytorch-ignite.ai/ecosystem/>https://pytorch-ignite.ai/ecosystem/</a></p></section><section><h1 id=community-engagement>Community Engagement</h1><div style=font-size:24px><ul><li><p>Google Summer of Code 2021</p><ul><li>Mentored two great students (<em>Ahmed</em> and <em>Arpan</em>)</li></ul></li><li><p>Google Season of Docs 2021</p><ul><li>Working with great tech writer (<em>Priyansi</em>)</li></ul></li><li><p>Hacktoberfest 2020 and 2021</p></li><li><p>PyData Global Mentored Sprint 2020 and coming up 2021 (End of October)</p></li><li><p>Our <a href=https://pytorch-ignite.ai>new website</a> development</p></li><li><p><a href=https://code-generator.pytorch-ignite.ai>PyTorch-Ignite Code-Generator project</a></p></li><li><p>Public meetings on Discord, open to everyone</p></li></ul><p><em>Stay tuned for upcoming events &mldr;</em></p><img width=50 src=https://summerofcode.withgoogle.com/static/img/summer-of-code-logo.svg>
 <img width=50 src=https://developers.google.com/season-of-docs/images/SeasonofDocs_Icon_Grey_300ppi_trimmed_480.png>
 <img width=50 src=https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg>
-<img width=150 src=https://pydata.org/global2021/wp-content/uploads/2021/06/logo.png></div></section><section><h1 id=join-the-pytorch-ignite-community>Join the PyTorch-Ignite Community</h1><p>We are looking for motivated contributors to help out with the project.</p><p><img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-small/1f3c5@2x.png alt=o1>
+<img width=150 src=https://pydata.org/global2021/wp-content/uploads/2021/06/logo.png></div></section><section><h1 id=img-width50-srchttpshacktoberfestswaglistcomimghacktoberfest_21jpg-hacktoberfest-2021-img-width50-srchttpshacktoberfestswaglistcomimghacktoberfest_21jpg><img width=50 src=https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg> Hacktoberfest 2021 <img width=50 src=https://hacktoberfestswaglist.com/img/Hacktoberfest_21.jpg></h1><p>The repositories participating:</p><ul><li>PyTorch-Ignite: <a href=https://github.com/pytorch/ignite>https://github.com/pytorch/ignite</a></li><li>Code Generator: <a href=https://github.com/pytorch-ignite/code-generator>https://github.com/pytorch-ignite/code-generator</a></li><li>Examples: <a href=https://github.com/pytorch-ignite/examples>https://github.com/pytorch-ignite/examples</a></li></ul></section><section><h1 id=join-the-pytorch-ignite-community>Join the PyTorch-Ignite Community</h1><p>We are looking for motivated contributors to help out with the project.</p><p><img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-small/1f3c5@2x.png alt=o1>
 Everyone is welcome to contribute
 <img src=https://a.slack-edge.com/production-standard-emoji-assets/13.0/apple-small/1f4af@2x.png alt=o2></p><a class=level-item href=https://www.github.com/pytorch/ignite><span class=icon><i class="fab fa-github"></i></span></a><a class=level-item href=https://discord.gg/djZtm3EmKj><span class=icon><i class="fab fa-discord"></i></span></a><div style=color:transparent>.</div><h4 id=how-to-start>How to start:</h4><ul><li>Read our <a href=https://github.com/pytorch/ignite/blob/master/CONTRIBUTING.md>Contributing guides</a></li><li>Pick <a href="https://github.com/pytorch/ignite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22">List of Help-wanted GH issue</a></li><li>Reach out to us on GH or Discord for more guidance</li></ul></section></section><section><table><tr><td><h2 id=thanks-for-your-attention->Thanks for your attention !</h2><p><em>Questions?</em></p><p>🙋👩‍💻🙋👨‍💻👩‍💻</p></td><td style="border:1px solid #000"><p>Follow us on</p><a class=level-item href=https://www.twitter.com/pytorch_ignite><span class=icon><i class="fab fa-twitter"></i></span></a><a class=level-item href=https://www.facebook.com/PyTorch-Ignite-Community-105837321694508><span class=icon><i class="fab fa-facebook"></i></span></a><a class=level-item href=https://dev.to/pytorch-ignite><span class=icon><i class="fab fa-dev"></i></span></a><p>and check out our new website:</p><p><a href=https://pytorch-ignite.ai>https://pytorch-ignite.ai</a></p></td></tr></table></section></div><style type=text/css>#footer-left{position:absolute;bottom:0%;left:50%;margin-right:-50%;transform:translate(-50%,-50%)}</style><footer class=footer>Python Bucaramanga - 2021/10/09 ○ pytorch-ignite.ai</footer></div><script type=text/javascript src=/pybucaramanga-pytorch-ignite-slides/reveal-hugo/object-assign.js></script><a href=/pybucaramanga-pytorch-ignite-slides/reveal-js/css/print/ id=print-location style=display:none></a><script type=text/javascript>var printLocationElement=document.getElementById('print-location');var link=document.createElement('link');link.rel='stylesheet';link.type='text/css';link.href=printLocationElement.href+(window.location.search.match(/print-pdf/gi)?'pdf.css':'paper.css');document.getElementsByTagName('head')[0].appendChild(link);</script><script type=application/json id=reveal-hugo-site-params>{"custom_theme":"pytorch-ignite-theme.scss","custom_theme_compile":true,"height":720,"highlight_theme":"monokai-sublime","slide_number":true,"transition_speed":"fast","width":1280}</script><script type=application/json id=reveal-hugo-page-params>null</script><script src=/pybucaramanga-pytorch-ignite-slides/reveal-js/js/reveal.js></script><script type=text/javascript>function camelize(map){if(map){Object.keys(map).forEach(function(k){newK=k.replace(/(\_\w)/g,function(m){return m[1].toUpperCase()});if(newK!=k){map[newK]=map[k];delete map[k];}});}
 return map;}

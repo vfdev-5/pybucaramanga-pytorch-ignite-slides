@@ -83,10 +83,14 @@ def train(dataloader, model, loss_fn, optimizer):
         loss.backward()
         optimizer.step()
 
+def test(dataloader, model, loss_fn):
+    # code to compute and print average loss and accuracy
+
 epochs = 5
 for t in range(epochs):
     print(f&quot;Epoch {t+1}\n-------------------------------&quot;)
     train(train_dataloader, model, loss_fn, optimizer)
+    test(test_dataloader, model, loss_fn)
 print(&quot;Done!&quot;)
 </code></pre></div></section><section><h2 id=why-using-pytorch-without-ignite-is-suboptimal->Why using PyTorch without Ignite is suboptimal ?</h2><p>For NN training and evaluation:</p><ul><li>PyTorch gives only &ldquo;low&rdquo;-level building components</li><li>Common bricks to code in any user project:<ul><li>metrics</li><li>checkpointing, best model saving, early stopping, &mldr;</li><li>logging to experiment tracking systems</li><li>code adaptation for device (e.g. GPU, XLA)</li></ul></li></ul></section><section><ul><li>Pure PyTorch code</li></ul><div style=font-size:20px><pre><code class=language-python>
 model = Net()

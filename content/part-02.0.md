@@ -9,11 +9,15 @@ weight = 2
 
 Let's train a MNIST classifier with PyTorch-Ignite!
 
-- [Link on Colab](https://colab.research.google.com/github/pytorch-ignite/pytorch-ignite.ai/blob/gh-pages/tutorials/getting-started.ipynb)
-
 ---
 
 ### ⬇️ Installation ⬇️
+
+Install PyTorch and TorchVision
+```bash
+$ pip install torch torchvision
+```
+Install PyTorch-Ignite
 
 via `pip` 📦
 ```bash
@@ -188,8 +192,8 @@ Validation Results - Epoch[5] Avg accuracy: 0.99 Avg loss: 0.03
 
 ### Complete code
 
-https://pytorch-ignite.ai/tutorials/getting-started
-
+- https://pytorch-ignite.ai/tutorials/getting-started
+- [Colab notebook](https://colab.research.google.com/github/pytorch-ignite/pytorch-ignite.ai/blob/gh-pages/tutorials/getting-started.ipynb)
 ---
 
 ### PyTorch-Ignite Code-Generator

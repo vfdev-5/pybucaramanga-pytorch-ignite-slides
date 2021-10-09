@@ -324,5 +324,9 @@ Handle distributed launchers with the same code
 - Collective operations
   - `all_reduce`, `all_gather`, and more
 
+---
+
+Any questions before we go on ?
+
 <!-- End vertical slides -->
 {{% /section %}}
